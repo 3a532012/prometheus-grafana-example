@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval:     15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: "gke_vocal-operand-399709_asia-east1-a_k8s-gke"
+
+    scrape_configs:
+    ###################### Node Exporter ######################
+    - job_name: 'node-exporter'
+      kubernetes_sd_configs:
+        - role: endpoints
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_endpoints_name]
+        regex: 'node-exporter'
+    - job_name: k8s-kube-state-metrics-gke_vocal-operand-399709_asia-east1-a_k8s-gke
+      honor_timestamps: true
+      metrics_path: /metrics
+      scheme: http
+      static_configs:
+        - targets: ['kube-state-metrics:8080']
+      metric_relabel_configs:
+      - target_label: cluster
+        replacement: gke_vocal-operand-399709_asia-east1-a_k8s-gke
